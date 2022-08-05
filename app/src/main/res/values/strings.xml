@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Wishlist</string>
+
+    <!-- Login and register fragment -->
+    <string name="login_edit_text">Login</string>
+    <string name="password_edit_text">Password</string>
+    <string name="confirm_password_edit_text">Confirm password</string>
+    <string name="login_confirm_button">OK</string>
+    <string name="login_register_button">Register</string>
+    <string name="register_confirm_button">Confirm</string>
+
+</resources>
