@@ -1,18 +1,22 @@
 package com.paveltitov.wishlist
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
+import android.view.View
+import android.widget.ProgressBar
+import androidx.appcompat.app.AppCompatActivity
+import com.paveltitov.wishlist.data.Wish
 import com.paveltitov.wishlist.fragments.*
 
-private const val LOGIN_FRAGMENT_TAG = "LOGIN_FRAGMENT_TAG"
-
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var progressBar: ProgressBar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
+
+        progressBar = findViewById(R.id.progress_bar)
 
         if (savedInstanceState == null) {
             startLogin()
@@ -20,96 +24,102 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (isLoginFragment()) {
-            finish()
-        } else {
-            super.onBackPressed()
+        supportFragmentManager.apply {
+            when {
+                backStackEntryCount == 1 -> finish()
+                else -> super.onBackPressed()
+            }
         }
     }
 
     fun startLogin() {
-        supportFragmentManager.apply {
-                popAllBackStack()
-                beginTransaction()
-                    .replace(
-                        R.id.fragment_container_frame_layout,
-                        LoginFragment(),
-                        LOGIN_FRAGMENT_TAG
-                    )
-                    .addToBackStack(LoginFragment::class.simpleName)
-                    .commit()
-            }
+        supportFragmentManager
+            .beginTransaction()
+            .replace(
+                R.id.fragment_container_frame_layout,
+                LoginFragment()
+            )
+            .addToBackStack(null)
+            .commit()
     }
 
     fun startRegister() {
-        supportFragmentManager.apply {
-            popToLogin()
-            beginTransaction()
-                .replace(
-                    R.id.fragment_container_frame_layout,
-                    RegisterFragment()
-                )
-                .addToBackStack(RegisterFragment::class.simpleName)
-                .commit()
-        }
+        supportFragmentManager
+            .beginTransaction()
+            .replace(
+                R.id.fragment_container_frame_layout,
+                RegisterFragment()
+            )
+            .addToBackStack(null)
+            .commit()
     }
 
     fun startWishlist() {
         supportFragmentManager.apply {
+            fun createWishlistFragment() {
                 beginTransaction()
                     .replace(
                         R.id.fragment_container_frame_layout,
-                        WishlistFragment(),
-                        LOGIN_FRAGMENT_TAG
+                        WishlistFragment()
                     )
-                    .addToBackStack(WishlistFragment::class.simpleName)
+                    .addToBackStack(null)
                     .commit()
             }
+            if (fragments.isNotEmpty() && fragments.first() is RegisterFragment) {
+                popBackStackImmediate()
+                createWishlistFragment()
+            } else if (fragments.isNotEmpty() &&
+                (
+                        (fragments.first() is WishFragment)
+                                || (fragments.first() is CreateWishFragment)
+                                || (fragments.first() is MakeFriendFragment)
+                        )
+            ) {
+                popBackStackImmediate()
+            } else {
+                createWishlistFragment()
+            }
+        }
     }
 
-    fun startWish() {
-        supportFragmentManager.apply {
-                beginTransaction()
-                    .replace(
-                        R.id.fragment_container_frame_layout,
-                        WishFragment(),
-                        LOGIN_FRAGMENT_TAG
-                    )
-                    .addToBackStack(WishFragment::class.simpleName)
-                    .commit()
-            }
+    fun startWish(wish: Wish) {
+        supportFragmentManager
+            .beginTransaction()
+            .replace(
+                R.id.fragment_container_frame_layout,
+                WishFragment.newInstance(wish)
+            )
+            .addToBackStack(null)
+            .commit()
     }
 
     fun startCreateWish() {
-        supportFragmentManager.apply {
-                beginTransaction()
-                    .replace(
-                        R.id.fragment_container_frame_layout,
-                        CreateWishFragment(),
-                        LOGIN_FRAGMENT_TAG
-                    )
-                    .addToBackStack(CreateWishFragment::class.simpleName)
-                    .commit()
-            }
+        supportFragmentManager
+            .beginTransaction()
+            .replace(
+                R.id.fragment_container_frame_layout,
+                CreateWishFragment()
+            )
+            .addToBackStack(null)
+            .commit()
     }
 
-    private fun FragmentManager.popAllBackStack(){
-        for (i in 0 until backStackEntryCount) {
-            popBackStack()
-        }
+    fun startMakeFriend() {
+        supportFragmentManager
+            .beginTransaction()
+            .replace(
+                R.id.fragment_container_frame_layout,
+                MakeFriendFragment()
+            )
+            .addToBackStack(null)
+            .commit()
     }
 
-    private fun FragmentManager.popToLogin() {
-        for (i in 0 until backStackEntryCount - 1) {
-            popBackStack()
-        }
-        if (!isLoginFragment()) {
-            throw IllegalStateException("LoginFragment should always be at bottom of fragments stack")
-        }
+    fun showProgressBar() {
+        progressBar.visibility = View.VISIBLE
     }
 
-    private fun isLoginFragment(): Boolean =
-        with(supportFragmentManager) {
-            backStackEntryCount == 1 && findFragmentByTag(LOGIN_FRAGMENT_TAG) != null
-        }
+    fun hideProgressBar() {
+        progressBar.visibility = View.GONE
+    }
 }

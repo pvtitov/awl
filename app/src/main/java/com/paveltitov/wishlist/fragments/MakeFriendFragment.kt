@@ -10,39 +10,42 @@ import android.widget.EditText
 import android.widget.Toast
 import com.paveltitov.wishlist.MainActivity
 import com.paveltitov.wishlist.R
+import com.paveltitov.wishlist.data.Person
+import com.paveltitov.wishlist.data.Wish
 import com.paveltitov.wishlist.store.Store
 
-class LoginFragment : Fragment() {
+class MakeFriendFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_login, container, false)
+        return inflater.inflate(R.layout.fragment_make_friend, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val loginEditText = view.findViewById<EditText>(R.id.login_edit_text)
-        val passwordEditText = view.findViewById<EditText>(R.id.password_edit_text)
-        view.findViewById<Button>(R.id.login_confirm_button)?.setOnClickListener {
+        val titleEditText = view.findViewById<EditText>(R.id.make_friend_title_edit_text)
+        view.findViewById<Button>(R.id.make_friend_confirm_button)?.setOnClickListener {
+            val login = titleEditText.text.toString()
             (activity as? MainActivity)?.showProgressBar()
-            Store.Factory.singleInstance.login(
-                login = loginEditText.text.toString(),
-                password = passwordEditText.text.toString(),
-                onSuccess = {
+            Store.Factory.singleInstance.makeFriend(
+                login,
+                {
                     (activity as? MainActivity)?.hideProgressBar()
-                    (activity as? MainActivity)?.startWishlist()
+                    Toast.makeText(
+                        view.context,
+                        "Friend $login added",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    (activity as MainActivity).startWishlist()
                 },
-                onError = { message ->
+                { message ->
                     (activity as? MainActivity)?.hideProgressBar()
                     Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
                 }
             )
-        }
-        view.findViewById<Button>(R.id.login_register_button)?.setOnClickListener {
-            (activity as? MainActivity)?.startRegister()
         }
     }
 }

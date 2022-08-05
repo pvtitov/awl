@@ -1,7 +1,7 @@
 package com.paveltitov.wishlist.data
 
+import java.io.Serializable
+
 data class Person(
-    val login: String,
-    val wishlist: List<Wish>,
-    val promiselist: List<Wish>
-)
+    val login: String
+): Serializable
