@@ -14,6 +14,7 @@ import com.paveltitov.wishlist.R
 import com.paveltitov.wishlist.data.Person
 import com.paveltitov.wishlist.data.Wish
 import com.paveltitov.wishlist.store.Store
+import com.paveltitov.wishlist.store.StoreFactory
 
 class WishlistFragment : Fragment() {
 
@@ -36,7 +37,7 @@ class WishlistFragment : Fragment() {
             }
         }
 
-        with(Store.Factory.singleInstance) {
+        with(StoreFactory.store) {
             (activity as? MainActivity)?.showProgressBar()
             getMe(
                 onSuccess = { me ->
@@ -84,7 +85,7 @@ class WishlistFragment : Fragment() {
             personList.forEach { person ->
                 flatData.add(person)
                 personTypeIndexSet.add(count++)
-                Store.Factory.singleInstance.getWishlist(
+                StoreFactory.store.getWishlist(
                     person = person,
                     onSuccess = { wishlist ->
                         wishlist.forEach { wish ->

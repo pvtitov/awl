@@ -1,17 +1,18 @@
 package com.paveltitov.wishlist.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.paveltitov.wishlist.MainActivity
 import com.paveltitov.wishlist.R
 import com.paveltitov.wishlist.data.Wish
 import com.paveltitov.wishlist.store.Store
+import com.paveltitov.wishlist.store.StoreFactory
 
 class WishFragment : Fragment() {
 
@@ -44,13 +45,13 @@ class WishFragment : Fragment() {
         val promiseButton = view.findViewById<Button>(R.id.wish_promise_button)
 
         (activity as? MainActivity)?.showProgressBar()
-        Store.Factory.singleInstance.getMe(
+        StoreFactory.store.getMe(
             { me ->
                 if (me == wish.owner) {
                     deleteButton.visibility = View.VISIBLE
                     promiseButton.visibility = View.GONE
                     deleteButton.setOnClickListener {
-                        Store.Factory.singleInstance.deleteWish(
+                        StoreFactory.store.deleteWish(
                             wish = wish,
                             onSuccess = {
                                 (activity as? MainActivity)?.hideProgressBar()
@@ -71,7 +72,7 @@ class WishFragment : Fragment() {
                     deleteButton.visibility = View.GONE
                     promiseButton.visibility = View.VISIBLE
                     promiseButton.setOnClickListener {
-                        Store.Factory.singleInstance.promiseWish(
+                        StoreFactory.store.promiseWish(
                             wish = wish,
                             onSuccess = {
                                 (activity as? MainActivity)?.hideProgressBar()

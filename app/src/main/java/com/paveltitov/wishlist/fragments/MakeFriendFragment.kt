@@ -1,18 +1,16 @@
 package com.paveltitov.wishlist.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.paveltitov.wishlist.MainActivity
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.data.Person
-import com.paveltitov.wishlist.data.Wish
-import com.paveltitov.wishlist.store.Store
+import com.paveltitov.wishlist.store.StoreFactory
 
 class MakeFriendFragment : Fragment() {
 
@@ -30,7 +28,7 @@ class MakeFriendFragment : Fragment() {
         view.findViewById<Button>(R.id.make_friend_confirm_button)?.setOnClickListener {
             val login = titleEditText.text.toString()
             (activity as? MainActivity)?.showProgressBar()
-            Store.Factory.singleInstance.makeFriend(
+            StoreFactory.store.makeFriend(
                 login,
                 {
                     (activity as? MainActivity)?.hideProgressBar()

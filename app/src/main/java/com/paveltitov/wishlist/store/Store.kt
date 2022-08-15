@@ -5,16 +5,19 @@ import com.paveltitov.wishlist.data.Wish
 
 interface Store {
 
-    fun register(login: String,
-                 password: String,
-                 onSuccess: () -> Unit,
-                 onError: (message: String) -> Unit
+    fun register(
+        login: String,
+        password: String,
+        onSuccess: () -> Unit,
+        onError: (message: String) -> Unit
     )
 
-    fun login(login: String,
-              password: String,
-              onSuccess: () -> Unit,
-              onError: (message: String) -> Unit)
+    fun login(
+        login: String,
+        password: String,
+        onSuccess: () -> Unit,
+        onError: (message: String) -> Unit
+    )
 
     fun getMe(
         onSuccess: (me: Person) -> Unit,
@@ -57,6 +60,6 @@ interface Store {
     )
 
     object Factory {
-        val singleInstance = StoreStub()
+        val store = StubStore()
     }
 }

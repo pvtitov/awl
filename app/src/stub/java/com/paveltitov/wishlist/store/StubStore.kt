@@ -3,7 +3,7 @@ package com.paveltitov.wishlist.store
 import com.paveltitov.wishlist.data.Person
 import com.paveltitov.wishlist.data.Wish
 
-class StoreStub : Store {
+class StubStore : Store {
 
     private val personMe = Person("test")
     private val testPassword = "123"
@@ -94,6 +94,4 @@ class StoreStub : Store {
     ) {
         onSuccess()
     }
-
-
 }

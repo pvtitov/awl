@@ -1,16 +1,16 @@
 package com.paveltitov.wishlist.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.paveltitov.wishlist.MainActivity
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.store.Store
+import com.paveltitov.wishlist.store.StoreFactory
 
 class RegisterFragment : Fragment() {
 
@@ -30,7 +30,7 @@ class RegisterFragment : Fragment() {
         view.findViewById<Button>(R.id.register_confirm_button)?.setOnClickListener {
             if (passwordEditText.text.toString() == confirmPasswordEditText.text.toString()) {
                 (activity as? MainActivity)?.showProgressBar()
-                Store.Factory.singleInstance.register(
+                StoreFactory.store.register(
                     login = loginEditText.text.toString(),
                     password = passwordEditText.text.toString(),
                     onSuccess = {

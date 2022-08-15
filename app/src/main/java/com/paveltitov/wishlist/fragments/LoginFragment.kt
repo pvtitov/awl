@@ -1,16 +1,16 @@
 package com.paveltitov.wishlist.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.paveltitov.wishlist.MainActivity
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.store.Store
+import com.paveltitov.wishlist.store.StoreFactory
 
 class LoginFragment : Fragment() {
 
@@ -28,7 +28,7 @@ class LoginFragment : Fragment() {
         val passwordEditText = view.findViewById<EditText>(R.id.password_edit_text)
         view.findViewById<Button>(R.id.login_confirm_button)?.setOnClickListener {
             (activity as? MainActivity)?.showProgressBar()
-            Store.Factory.singleInstance.login(
+            StoreFactory.store.login(
                 login = loginEditText.text.toString(),
                 password = passwordEditText.text.toString(),
                 onSuccess = {
