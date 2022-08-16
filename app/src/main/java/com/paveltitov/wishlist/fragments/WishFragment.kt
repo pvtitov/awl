@@ -47,10 +47,12 @@ class WishFragment : Fragment() {
         (activity as? MainActivity)?.showProgressBar()
         StoreFactory.store.getMe(
             { me ->
+                (activity as? MainActivity)?.hideProgressBar()
                 if (me == wish.owner) {
                     deleteButton.visibility = View.VISIBLE
                     promiseButton.visibility = View.GONE
                     deleteButton.setOnClickListener {
+                        (activity as? MainActivity)?.showProgressBar()
                         StoreFactory.store.deleteWish(
                             wish = wish,
                             onSuccess = {
@@ -72,6 +74,7 @@ class WishFragment : Fragment() {
                     deleteButton.visibility = View.GONE
                     promiseButton.visibility = View.VISIBLE
                     promiseButton.setOnClickListener {
+                        (activity as? MainActivity)?.showProgressBar()
                         StoreFactory.store.promiseWish(
                             wish = wish,
                             onSuccess = {

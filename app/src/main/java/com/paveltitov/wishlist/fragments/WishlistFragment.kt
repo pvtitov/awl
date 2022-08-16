@@ -18,6 +18,8 @@ import com.paveltitov.wishlist.store.StoreFactory
 
 class WishlistFragment : Fragment() {
 
+    private var progressShowCounter = 0
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -38,27 +40,31 @@ class WishlistFragment : Fragment() {
         }
 
         with(StoreFactory.store) {
+            progressShowCounter = 0
             (activity as? MainActivity)?.showProgressBar()
             getMe(
                 onSuccess = { me ->
-                    (activity as? MainActivity)?.hideProgressBar()
+                    progressShowCounter++
+                    hideProgressOnCount(2)
                     combinedList.add(0, me)
                     updateAdapter()
                 },
                 onError = { message ->
-                    (activity as? MainActivity)?.hideProgressBar()
+                    progressShowCounter++
+                    hideProgressOnCount(2)
                     Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
                 }
             )
-            (activity as? MainActivity)?.showProgressBar()
             getFriends(
                 onSuccess = { friendList ->
-                    (activity as? MainActivity)?.showProgressBar()
+                    progressShowCounter++
+                    hideProgressOnCount(2)
                     combinedList.addAll(friendList)
                     updateAdapter()
                 },
                 onError = { message ->
-                    (activity as? MainActivity)?.showProgressBar()
+                    progressShowCounter++
+                    hideProgressOnCount(2)
                     Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
                 }
             )
@@ -68,6 +74,12 @@ class WishlistFragment : Fragment() {
         }
         view.findViewById<Button>(R.id.wishlist_make_friend_button).setOnClickListener {
             (activity as MainActivity).startMakeFriend()
+        }
+    }
+
+    private fun hideProgressOnCount(count: Int) {
+        if (progressShowCounter == count) {
+            (activity as? MainActivity)?.hideProgressBar()
         }
     }
 
