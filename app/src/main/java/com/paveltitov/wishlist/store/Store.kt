@@ -58,8 +58,4 @@ interface Store {
         onSuccess: () -> Unit,
         onError: (message: String) -> Unit
     )
-
-    object Factory {
-        val store = StubStore()
-    }
 }

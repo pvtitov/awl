@@ -1,5 +1,5 @@
 package com.paveltitov.wishlist.store
 
 object StoreFactory {
-    val store: Store = StubStore()
+    val store: Store = MyWishListRuStore()
 }

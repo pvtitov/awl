@@ -3,7 +3,7 @@ package com.paveltitov.wishlist.store
 import com.paveltitov.wishlist.data.Person
 import com.paveltitov.wishlist.data.Wish
 
-class StubStore : Store {
+class BackendStore : Store {
     override fun register(
         login: String,
         password: String,
