@@ -1,14 +1,11 @@
 package com.paveltitov.wishlist.store
 
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
 import com.paveltitov.wishlist.data.Person
 import com.paveltitov.wishlist.data.Wish
-import java.io.*
-import java.net.HttpURLConnection
-import java.net.URL
-import java.nio.charset.Charset
 
-class MyWishListRuStore : Store {
+class MyWishListRuStore(private val httpClient: HttpClient) : Store {
     override fun register(
         login: String,
         password: String,
@@ -24,23 +21,25 @@ class MyWishListRuStore : Store {
         onSuccess: () -> Unit,
         onError: (message: String) -> Unit
     ) {
+        val mainHandler = Handler(Looper.getMainLooper())
         Thread {
-            val httpURLConnection =
-                URL("http://www.mywishlist.ru/").openConnection() as HttpURLConnection
-            try {
-                val inputStream: InputStream = BufferedInputStream(httpURLConnection.inputStream)
-                val stringBuilder = StringBuilder()
-                BufferedReader(
-                    InputStreamReader(inputStream, Charset.forName("UTF-8"))
-                ).use { reader ->
-                    var ch = 0
-                    while (reader.read().also { ch = it } != -1) {
-                        stringBuilder.append(ch.toChar())
+            val response = httpClient.login("pavel_titov", "just4E")
+            when (response) {
+                is HttpClient.Response.Success -> response.response
+                is HttpClient.Response.Error -> response.message
+            }.let { raw ->
+                val results = mutableListOf<String>()
+                raw
+                    .split("<table class='Virgin'><tr><td><h5><a href=")
+                    .drop(0)
+                    .forEach { it
+                        .substringAfter("\">")
+                        .substringBefore("</a>")
                     }
-                    Log.d("happy", stringBuilder.toString())
+
+                mainHandler.post {
+                    onError(results.toString())
                 }
-            } finally {
-                httpURLConnection.disconnect()
             }
         }.start()
     }
