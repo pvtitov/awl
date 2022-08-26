@@ -30,9 +30,9 @@ android {
             dimension "dataSource"
             applicationIdSuffix=".stub"
         }
-        site {
+        cloud {
             dimension "dataSource"
-            applicationIdSuffix=".site"
+            applicationIdSuffix=".cloud"
         }
         backend {
             dimension "dataSource"
