@@ -3,6 +3,11 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+Properties properties = new Properties()
+properties.load(new FileInputStream(new File('local.properties')))
+def apiKey = properties.getProperty('apiKey')
+def dirUrl = properties.getProperty('dirUrl')
+
 android {
     compileSdk 32
 
@@ -31,6 +36,8 @@ android {
             applicationIdSuffix=".stub"
         }
         cloud {
+            buildConfigField 'String', 'API_KEY', apiKey
+            buildConfigField 'String', 'DIR_URL', dirUrl
             dimension "dataSource"
             applicationIdSuffix=".cloud"
         }
