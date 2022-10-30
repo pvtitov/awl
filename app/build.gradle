@@ -9,16 +9,18 @@ def apiKey = properties.getProperty('apiKey')
 def dirUrl = properties.getProperty('dirUrl')
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.paveltitov.wishlist"
         minSdk 16
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -35,15 +37,11 @@ android {
             dimension "dataSource"
             applicationIdSuffix=".stub"
         }
-        cloud {
+        googledrive {
             buildConfigField 'String', 'API_KEY', apiKey
             buildConfigField 'String', 'DIR_URL', dirUrl
             dimension "dataSource"
             applicationIdSuffix=".cloud"
-        }
-        backend {
-            dimension "dataSource"
-            applicationIdSuffix=".backend"
         }
     }
 
@@ -58,11 +56,22 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'androidx.appcompat:appcompat:1.3.0'
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+
+    // Google Drive
+    implementation 'com.google.android.gms:play-services-auth:20.3.0'
+    implementation('com.google.api-client:google-api-client-android:2.0.0') {
+        exclude group: 'org.apache.httpcomponents'
+        exclude module: 'guava-jdk5'
+    }
+    implementation('com.google.apis:google-api-services-drive:v3-rev197-1.25.0') {
+        exclude group: 'org.apache.httpcomponents'
+        exclude module: 'guava-jdk5'
+    }
 }

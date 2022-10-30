@@ -6,6 +6,7 @@ import java.net.HttpURLConnection.*
 import java.net.URL
 import java.nio.charset.Charset
 
+// TODO maybe unnecessary class
 class HttpClient {
     private val host = "http://www.mywishlist.ru"
 

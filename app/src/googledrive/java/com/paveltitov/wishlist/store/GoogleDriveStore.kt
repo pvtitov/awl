@@ -1,6 +1,5 @@
 package com.paveltitov.wishlist.store
 
-import com.paveltitov.wishlist.BuildConfig
 import com.paveltitov.wishlist.data.Person
 import com.paveltitov.wishlist.data.Wish
 
@@ -20,7 +19,7 @@ class GoogleDriveStore(private val httpClient: HttpClient) : Store {
         onSuccess: () -> Unit,
         onError: (message: String) -> Unit
     ) {
-        BuildConfig.DIR
+
     }
 
     override fun getMe(onSuccess: (me: Person) -> Unit, onError: (message: String) -> Unit) {
