@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="../../../../../../layout/custom_preview.xml" value="0.1" />
+        <entry key="app/src/googledrive/res/layout/fragment_login.xml" value="0.22" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.21920289855072464" />
         <entry key="app/src/main/res/layout/fragment_create_wish.xml" value="0.1947463768115942" />
         <entry key="app/src/main/res/layout/fragment_login.xml" value="0.20471014492753623" />
@@ -12,6 +13,7 @@
         <entry key="app/src/main/res/layout/fragment_wish.xml" value="0.1947463768115942" />
         <entry key="app/src/main/res/layout/fragment_wish_list.xml" value="0.1947463768115942" />
         <entry key="app/src/main/res/layout/item_wish.xml" value="0.2033514492753623" />
+        <entry key="app/src/stub/res/layout/fragment_login.xml" value="0.11727456940222898" />
       </map>
     </option>
   </component>

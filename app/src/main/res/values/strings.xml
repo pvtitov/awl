@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Wishlist</string>
+    <string name="app_name">Another Wish List</string>
 
     <string name="login_edit_text">Login</string>
     <string name="password_edit_text">Password</string>

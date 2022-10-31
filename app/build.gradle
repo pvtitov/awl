@@ -7,6 +7,7 @@ Properties properties = new Properties()
 properties.load(new FileInputStream(new File('local.properties')))
 def apiKey = properties.getProperty('apiKey')
 def dirUrl = properties.getProperty('dirUrl')
+def serverClientId = properties.getProperty('serverClientId')
 
 android {
     compileSdk 33
@@ -40,8 +41,9 @@ android {
         googledrive {
             buildConfigField 'String', 'API_KEY', apiKey
             buildConfigField 'String', 'DIR_URL', dirUrl
+            buildConfigField 'String', 'SERVER_CLIENT_ID', serverClientId
             dimension "dataSource"
-            applicationIdSuffix=".cloud"
+            applicationIdSuffix=".googledrive"
         }
     }
 
