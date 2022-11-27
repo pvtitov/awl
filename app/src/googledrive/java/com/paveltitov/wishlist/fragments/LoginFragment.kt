@@ -1,5 +1,6 @@
 package com.paveltitov.wishlist.fragments
 
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.os.Bundle
@@ -44,12 +45,8 @@ class LoginFragment : Fragment() {
             SIGN_IN_REQUEST_CODE -> {
                 try {
                     val credential = oneTapClient.getSignInCredentialFromIntent(data)
-                    val idToken = credential.googleIdToken
-                    if (idToken != null) {
-                        makeSureUserHasWishlistOnGoogleDrive(idToken)
-                    } else {
-                        Log.d(TAG, "No ID token acquired")
-                    }
+                    val accountName = credential.id
+                    makeSureUserHasWishlistOnGoogleDrive(accountName)
                 } catch (e: ApiException) {
                     Log.e(TAG, "${e.statusCode} ${e.localizedMessage}")
                 }
@@ -90,8 +87,12 @@ class LoginFragment : Fragment() {
             }
     }
 
-    private fun makeSureUserHasWishlistOnGoogleDrive(idToken: String) {
-        context?.let { Toast.makeText(it, "Ура! Вы вошли.", Toast.LENGTH_SHORT).show() }
+    private fun makeSureUserHasWishlistOnGoogleDrive(accountName: String) {
+        context?.let {
+            Toast.makeText(it, "Ура! Вы вошли.", Toast.LENGTH_SHORT).show()
+            // TODO refactor the following, start wishllist fragment with idToken put into arguments
+            DriveManager().makeSureFileExists(it, accountName)
+        }
     }
 
     companion object {
