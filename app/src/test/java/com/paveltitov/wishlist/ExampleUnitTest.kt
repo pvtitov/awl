@@ -1,6 +1,6 @@
 package com.paveltitov.wishlist
 
-import com.paveltitov.wishlist.store.HttpClient
+import com.paveltitov.wishlist.data.HttpClient
 import org.junit.Test
 
 /**
