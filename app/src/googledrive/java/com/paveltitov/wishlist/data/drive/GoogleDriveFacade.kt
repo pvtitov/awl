@@ -1,4 +1,4 @@
-package com.paveltitov.wishlist.data
+package com.paveltitov.wishlist.data.drive
 
 import com.google.api.services.drive.Drive
 

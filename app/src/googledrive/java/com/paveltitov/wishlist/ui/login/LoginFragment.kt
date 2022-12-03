@@ -1,5 +1,6 @@
 package com.paveltitov.wishlist.ui.login
 
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.os.Bundle
@@ -11,18 +12,31 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.common.api.ApiException
-import com.paveltitov.wishlist.BuildConfig.SERVER_CLIENT_ID
 import com.paveltitov.wishlist.R
+import com.paveltitov.wishlist.data.drive.DriveManager
+import kotlinx.coroutines.launch
 
 
 class LoginFragment : Fragment() {
 
     private lateinit var oneTapClient: SignInClient
-    private lateinit var signInRequest: BeginSignInRequest
+    private lateinit var viewModel: LoginViewModel
+    private lateinit var progressBar: ProgressBar
+    private lateinit var textView: TextView
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        viewModel = ViewModelProvider(this)[LoginViewModel::class.java]
+        oneTapClient = Identity.getSignInClient(requireActivity())
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,7 +48,15 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        getFromUserGoogleIdToken(view)
+        view.findViews()
+        subscribeOnUiStates()
+        textView.apply {
+            isFocusable = true
+            isClickable = true
+            setOnClickListener {
+                viewModel.login()
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -43,55 +65,71 @@ class LoginFragment : Fragment() {
         when (requestCode) {
             SIGN_IN_REQUEST_CODE -> {
                 try {
-                    val credential = oneTapClient.getSignInCredentialFromIntent(data)
-                    val accountName = credential.id
-                    makeSureUserHasWishlistOnGoogleDrive(accountName)
-                } catch (e: ApiException) {
-                    Log.e(TAG, "${e.statusCode} ${e.localizedMessage}")
-                }
-            }
-        }
-    }
-
-    private fun getFromUserGoogleIdToken(view: View) {
-        val nonNullActivity = activity ?: throw IllegalStateException("Activity can not be null")
-
-        oneTapClient = Identity.getSignInClient(nonNullActivity)
-        signInRequest = BeginSignInRequest.builder()
-            .setGoogleIdTokenRequestOptions(
-                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                    .setSupported(true)
-                    // Your server's client ID, not your Android client ID.
-                    .setServerClientId(SERVER_CLIENT_ID)
-                    .build()
-            )
-            .build()
-
-        oneTapClient.beginSignIn(signInRequest)
-            .addOnSuccessListener(nonNullActivity) { result ->
-                try {
-                    startIntentSenderForResult(
-                        result.pendingIntent.intentSender, SIGN_IN_REQUEST_CODE,
-                        null, 0, 0, 0, null
+                    viewModel.onSuccess(
+                        oneTapClient.getSignInCredentialFromIntent(data).id
                     )
-                } catch (e: IntentSender.SendIntentException) {
-                    Log.e(TAG, "Couldn't start One Tap UI: ${e.localizedMessage}")
+                } catch (e: ApiException) {
+                    viewModel.onError("${e.statusCode} ${e.localizedMessage}")
                 }
             }
-            .addOnFailureListener(nonNullActivity) { e ->
-                view.findViewById<ProgressBar>(R.id.login_progress_bar).visibility = View.GONE
-                view.findViewById<TextView>(R.id.login_text_view).text =
-                    nonNullActivity.getString(R.string.login_authentication_failed)
-                e.localizedMessage?.let { Log.d(TAG, it) }
-            }
+        }
     }
 
-    private fun makeSureUserHasWishlistOnGoogleDrive(accountName: String) {
-        context?.let {
-            Toast.makeText(it, "Ура! Вы вошли.", Toast.LENGTH_SHORT).show()
-            // TODO refactor the following, start wishllist fragment with idToken put into arguments
-            DriveManager().makeSureFileExists(it, accountName)
+    private fun View.findViews() {
+        progressBar = findViewById(R.id.login_progress_bar)
+        textView = findViewById(R.id.login_text_view)
+    }
+
+    private fun subscribeOnUiStates() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiState.collect { state ->
+                when (state) {
+                    Idle -> {
+                        progressBar.visibility = View.GONE
+                    }
+                    Loading -> {
+                        progressBar.visibility = View.VISIBLE
+                        activity?.also { activityNonNull ->
+                            oneTapClient.beginSignIn(viewModel.buildRequest())
+                                .addOnSuccessListener(activityNonNull) { result ->
+                                    activityNonNull.startOneTapUI(result)
+                                }
+                                .addOnFailureListener(activityNonNull) { e ->
+                                    viewModel.onError(e.localizedMessage ?: "Failed to open One Tap UI")
+                                }
+                        }
+                    }
+                    is Error -> {
+                        progressBar.visibility = View.GONE
+                        textView.text = context?.getString(R.string.login_authentication_failed)
+                        Log.d(TAG, state.message)
+                    }
+                    is Success -> {
+                        progressBar.visibility = View.GONE
+                        context?.let { c ->
+                            Toast.makeText(c, "Ура! Вы вошли.", Toast.LENGTH_SHORT).show()
+                            c.makeSureUserHasWishlistOnGoogleDrive(state.token)
+                        }
+                    }
+                }
+            }
         }
+    }
+
+    private fun FragmentActivity.startOneTapUI(result: BeginSignInResult) {
+        try {
+            startIntentSenderForResult(
+                result.pendingIntent.intentSender, SIGN_IN_REQUEST_CODE,
+                null, 0, 0, 0
+            )
+        } catch (e: IntentSender.SendIntentException) {
+            Log.e(TAG, "Couldn't start One Tap UI: ${e.localizedMessage}")
+        }
+    }
+
+    private fun Context.makeSureUserHasWishlistOnGoogleDrive(token: String) {
+        // TODO refactor the following, start wishllist fragment with idToken put into arguments
+        DriveManager().makeSureFileExists(this, token)
     }
 
     companion object {

@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "AWL"
+rootProject.name = "Another Wish List"
 include ':app'

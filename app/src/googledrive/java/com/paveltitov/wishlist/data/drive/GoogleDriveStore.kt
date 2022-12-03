@@ -1,10 +1,10 @@
-package com.paveltitov.wishlist.data
+package com.paveltitov.wishlist.data.drive
 
 import com.paveltitov.wishlist.core.DataStorage
 import com.paveltitov.wishlist.core.entities.Person
 import com.paveltitov.wishlist.core.entities.Wish
 
-class GoogleDriveStore() : DataStorage {
+class GoogleDriveStore : DataStorage {
     override fun register(
         login: String,
         password: String,
