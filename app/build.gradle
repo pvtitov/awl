@@ -54,6 +54,14 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+    }
+
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
 }
 
 dependencies {
@@ -71,17 +79,12 @@ dependencies {
 
     // Google Drive
     implementation 'com.google.android.gms:play-services-auth:20.4.0'
-    implementation('com.google.api-client:google-api-client-android:2.0.0') {
-        exclude group: 'org.apache.httpcomponents'
-        exclude module: 'guava-jdk5'
-    }
-    implementation('com.google.apis:google-api-services-drive:v3-rev197-1.25.0') {
-        exclude group: 'org.apache.httpcomponents'
-        exclude module: 'guava-jdk5'
-    }
+    implementation('com.google.api-client:google-api-client-android:2.0.0')
+    implementation('com.google.apis:google-api-services-drive:v3-rev197-1.25.0')
 
     // Net work
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation('com.google.http-client:google-http-client-gson:1.42.3')
 
     // Testing
     testImplementation 'junit:junit:4.13.2'

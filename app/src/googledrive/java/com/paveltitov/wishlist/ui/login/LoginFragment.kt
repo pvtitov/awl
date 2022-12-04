@@ -72,6 +72,7 @@ class LoginFragment : Fragment() {
                     viewModel.onError("${e.statusCode} ${e.localizedMessage}")
                 }
             }
+            else -> viewModel.onError("Что-то пошло не так")
         }
     }
 
@@ -108,7 +109,7 @@ class LoginFragment : Fragment() {
                         progressBar.visibility = View.GONE
                         context?.let { c ->
                             Toast.makeText(c, "Ура! Вы вошли.", Toast.LENGTH_SHORT).show()
-                            c.makeSureUserHasWishlistOnGoogleDrive(state.token)
+                            c.makeSureUserHasWishlistOnGoogleDrive()
                         }
                     }
                 }
@@ -120,16 +121,15 @@ class LoginFragment : Fragment() {
         try {
             startIntentSenderForResult(
                 result.pendingIntent.intentSender, SIGN_IN_REQUEST_CODE,
-                null, 0, 0, 0
+                null, 0, 0, 0, null
             )
         } catch (e: IntentSender.SendIntentException) {
             Log.e(TAG, "Couldn't start One Tap UI: ${e.localizedMessage}")
         }
     }
 
-    private fun Context.makeSureUserHasWishlistOnGoogleDrive(token: String) {
-        // TODO refactor the following, start wishllist fragment with idToken put into arguments
-        DriveManager().makeSureFileExists(this, token)
+    private fun Context.makeSureUserHasWishlistOnGoogleDrive() {
+        DriveManager().makeSureFileExists(this)
     }
 
     companion object {
