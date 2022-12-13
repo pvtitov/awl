@@ -1,5 +1,6 @@
 package com.paveltitov.wishlist.ui.login
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
@@ -93,7 +94,14 @@ class LoginFragment : Fragment() {
                         activity?.also { activityNonNull ->
                             oneTapClient.beginSignIn(viewModel.buildRequest())
                                 .addOnSuccessListener(activityNonNull) { result ->
-                                    activityNonNull.startOneTapUI(result)
+                                    try {
+                                        startIntentSenderForResult(
+                                            result.pendingIntent.intentSender, SIGN_IN_REQUEST_CODE,
+                                            null, 0, 0, 0, null
+                                        )
+                                    } catch (e: IntentSender.SendIntentException) {
+                                        Log.e(TAG, "Couldn't start One Tap UI: ${e.localizedMessage}")
+                                    }
                                 }
                                 .addOnFailureListener(activityNonNull) { e ->
                                     viewModel.onError(e.localizedMessage ?: "Failed to open One Tap UI")
@@ -114,17 +122,6 @@ class LoginFragment : Fragment() {
                     }
                 }
             }
-        }
-    }
-
-    private fun FragmentActivity.startOneTapUI(result: BeginSignInResult) {
-        try {
-            startIntentSenderForResult(
-                result.pendingIntent.intentSender, SIGN_IN_REQUEST_CODE,
-                null, 0, 0, 0, null
-            )
-        } catch (e: IntentSender.SendIntentException) {
-            Log.e(TAG, "Couldn't start One Tap UI: ${e.localizedMessage}")
         }
     }
 
