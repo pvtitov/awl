@@ -5,17 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/login_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/login_welcome_to_authentication"/>
-
-    <ProgressBar
-        android:id="@+id/login_progress_bar"
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/login_sign_in_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center" />
+
+    <ProgressBar
+        android:id="@+id/login_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
 
 </FrameLayout>

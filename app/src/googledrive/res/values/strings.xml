@@ -1,5 +1,3 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="login_welcome_to_authentication">Аутентификация. Нужен Google аккаунт - ваш вишлист будет сохранен в вашем Google Drive.</string>
-    <string name="login_authentication_failed">Похоже, вы не залогинены в Google аккаунт.</string>
 </resources>

@@ -1,42 +1,38 @@
 package com.paveltitov.wishlist.ui.login
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.IntentSender
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.auth.api.identity.BeginSignInResult
-import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.auth.api.identity.SignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.paveltitov.wishlist.R
 import com.paveltitov.wishlist.data.drive.DriveManager
-import kotlinx.coroutines.launch
 
 
 class LoginFragment : Fragment() {
 
-    private lateinit var oneTapClient: SignInClient
-    private lateinit var viewModel: LoginViewModel
     private lateinit var progressBar: ProgressBar
-    private lateinit var textView: TextView
+    private lateinit var button: SignInButton
+    private lateinit var signInClient: GoogleSignInClient
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        viewModel = ViewModelProvider(this)[LoginViewModel::class.java]
-        oneTapClient = Identity.getSignInClient(requireActivity())
+        signInClient = GoogleSignIn.getClient(
+            context,
+            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build()
+        )
     }
 
     override fun onCreateView(
@@ -50,13 +46,8 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViews()
-        subscribeOnUiStates()
-        textView.apply {
-            isFocusable = true
-            isClickable = true
-            setOnClickListener {
-                viewModel.login()
-            }
+        button.setOnClickListener {
+            startActivityForResult(signInClient.signInIntent, SIGN_IN_REQUEST_CODE)
         }
     }
 
@@ -64,69 +55,21 @@ class LoginFragment : Fragment() {
         super.onActivityResult(requestCode, resultCode, data)
 
         when (requestCode) {
-            SIGN_IN_REQUEST_CODE -> {
+            SIGN_IN_REQUEST_CODE, 123 -> {
                 try {
-                    viewModel.onSuccess(
-                        oneTapClient.getSignInCredentialFromIntent(data).id
-                    )
+                    activity?.let { act ->
+                        DriveManager().makeSureFileExists(act)
+                    }
                 } catch (e: ApiException) {
-                    viewModel.onError("${e.statusCode} ${e.localizedMessage}")
+                    Log.d(TAG, "${e.statusCode} ${e.localizedMessage}")
                 }
             }
-            else -> viewModel.onError("Что-то пошло не так")
         }
     }
 
     private fun View.findViews() {
         progressBar = findViewById(R.id.login_progress_bar)
-        textView = findViewById(R.id.login_text_view)
-    }
-
-    private fun subscribeOnUiStates() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                when (state) {
-                    Idle -> {
-                        progressBar.visibility = View.GONE
-                    }
-                    Loading -> {
-                        progressBar.visibility = View.VISIBLE
-                        activity?.also { activityNonNull ->
-                            oneTapClient.beginSignIn(viewModel.buildRequest())
-                                .addOnSuccessListener(activityNonNull) { result ->
-                                    try {
-                                        startIntentSenderForResult(
-                                            result.pendingIntent.intentSender, SIGN_IN_REQUEST_CODE,
-                                            null, 0, 0, 0, null
-                                        )
-                                    } catch (e: IntentSender.SendIntentException) {
-                                        Log.e(TAG, "Couldn't start One Tap UI: ${e.localizedMessage}")
-                                    }
-                                }
-                                .addOnFailureListener(activityNonNull) { e ->
-                                    viewModel.onError(e.localizedMessage ?: "Failed to open One Tap UI")
-                                }
-                        }
-                    }
-                    is Error -> {
-                        progressBar.visibility = View.GONE
-                        textView.text = context?.getString(R.string.login_authentication_failed)
-                        Log.d(TAG, state.message)
-                    }
-                    is Success -> {
-                        progressBar.visibility = View.GONE
-                        context?.let { c ->
-                            Toast.makeText(c, "Ура! Вы вошли.", Toast.LENGTH_SHORT).show()
-                            c.makeSureUserHasWishlistOnGoogleDrive()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun Context.makeSureUserHasWishlistOnGoogleDrive() {
-        DriveManager().makeSureFileExists(this)
+        button = findViewById(R.id.login_sign_in_button)
     }
 
     companion object {
