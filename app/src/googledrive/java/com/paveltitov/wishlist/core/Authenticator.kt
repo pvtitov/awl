@@ -4,7 +4,7 @@ interface Authenticator {
 
     fun signIn()
 
-    fun onSuccessfulSignIn(action: () -> Unit)
+    fun onSuccessfulResponse(action: () -> Unit)
 
     fun signOut()
 

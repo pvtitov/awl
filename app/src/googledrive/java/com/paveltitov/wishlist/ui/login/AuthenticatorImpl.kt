@@ -25,7 +25,7 @@ class AuthenticatorImpl(private val fragmentWeakReference: WeakReference<Fragmen
         } ?: logFragmentIsNull()
     }
 
-    override fun onSuccessfulSignIn(action: () -> Unit) {
+    override fun onSuccessfulResponse(action: () -> Unit) {
         try {
             action()
         } catch (e: ApiException) {

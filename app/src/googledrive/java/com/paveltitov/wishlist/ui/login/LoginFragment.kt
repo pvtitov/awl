@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.gms.common.SignInButton
 import com.paveltitov.wishlist.R
 import com.paveltitov.wishlist.core.Authenticator
-import com.paveltitov.wishlist.data.drive.DriveManager
+import com.paveltitov.wishlist.core.DataStorage
 import com.paveltitov.wishlist.di.DI
 import com.paveltitov.wishlist.di.factories.AuthenticatorFactory
 
@@ -47,9 +47,16 @@ class LoginFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        activity?.let {
-            auth.onSuccessfulSignIn {
-                DriveManager().makeSureFileExists(it)
+        when (requestCode) {
+            Authenticator.REQUEST_CODE -> {
+                activity?.let {
+                    auth.onSuccessfulResponse {
+                        val storage = DI.get(DataStorage::class) as DataStorage
+                        storage.getMe(
+                            { me -> storage.getWishlist(me, {}, {}) },
+                            {})
+                    }
+                }
             }
         }
     }

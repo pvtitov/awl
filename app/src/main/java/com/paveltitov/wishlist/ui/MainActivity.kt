@@ -138,6 +138,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun initDI() {
         DI.setFactory(ScreenRouter::class, ScreenRouterFactory(supportFragmentManager))
-        DI.setFactory(DataStorage::class, DataStorageFactory())
+        DI.setFactory(DataStorage::class, DataStorageFactory(this))
     }
 }
