@@ -15,6 +15,9 @@ object DI {
     fun get(clazz: KClass<out Any>): Any {
         return dependencies[clazz]
             ?: factories[clazz]?.create()?.also { dependencies[clazz] = it }
-            ?: throw IllegalStateException("DI failed to provide ${clazz.simpleName}")
+            ?: throw DIException("DI failed to provide ${clazz.simpleName}")
     }
 }
+
+class DIException(message: String? = null, cause: Throwable? = null) :
+    IllegalStateException(message, cause)

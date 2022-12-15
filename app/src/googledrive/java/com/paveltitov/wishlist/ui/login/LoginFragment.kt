@@ -9,7 +9,10 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.google.android.gms.common.SignInButton
 import com.paveltitov.wishlist.R
+import com.paveltitov.wishlist.core.Authenticator
 import com.paveltitov.wishlist.data.drive.DriveManager
+import com.paveltitov.wishlist.di.DI
+import com.paveltitov.wishlist.di.factories.AuthenticatorFactory
 
 
 class LoginFragment : Fragment() {
@@ -17,9 +20,14 @@ class LoginFragment : Fragment() {
     private lateinit var auth: Authenticator
     private lateinit var button: SignInButton
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        DI.setFactory(Authenticator::class, AuthenticatorFactory(this))
+    }
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        auth = Authenticator()
+        auth = DI.get(Authenticator::class) as Authenticator
     }
 
     override fun onCreateView(
@@ -33,16 +41,14 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         button = view.findViewById(R.id.login_sign_in_button)
-        button.setOnClickListener {
-            auth.signIn(this)
-        }
+        button.setOnClickListener { auth.signIn() }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         activity?.let {
-            auth.doIfAllowed(this, requestCode) {
+            auth.onSuccessfulSignIn {
                 DriveManager().makeSureFileExists(it)
             }
         }
