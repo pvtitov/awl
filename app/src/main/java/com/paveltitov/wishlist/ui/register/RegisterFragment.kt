@@ -8,10 +8,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.coroutineScope
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.core.DataStorage
+import com.paveltitov.wishlist.core.DataStorageCoroutines
 import com.paveltitov.wishlist.di.DI
 import com.paveltitov.wishlist.ui.MainActivity
+import kotlinx.coroutines.launch
 
 class RegisterFragment : Fragment() {
 
@@ -31,24 +33,28 @@ class RegisterFragment : Fragment() {
         view.findViewById<Button>(R.id.register_confirm_button)?.setOnClickListener {
             if (passwordEditText.text.toString() == confirmPasswordEditText.text.toString()) {
                 (activity as? MainActivity)?.showProgressBar()
-                (DI.get(DataStorage::class) as DataStorage).register(
-                    login = loginEditText.text.toString(),
-                    password = passwordEditText.text.toString(),
-                    onSuccess = {
-                        (activity as? MainActivity)?.hideProgressBar()
-                        Toast.makeText(
-                            view.context,
-                            "New user ${loginEditText.text} registered",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        (activity as? MainActivity)?.startWishlist()
-                    },
-                    onError = { message ->
-                        (activity as? MainActivity)?.hideProgressBar()
-                        Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
 
+                lifecycle.coroutineScope.launch {
+                    when (val result =
+                        (DI.get(DataStorageCoroutines::class) as DataStorageCoroutines).register(
+                            login = loginEditText.text.toString(),
+                            password = passwordEditText.text.toString(),
+                        )) {
+                        is DataStorageCoroutines.Success -> {
+                            (activity as? MainActivity)?.hideProgressBar()
+                            Toast.makeText(
+                                view.context,
+                                "New user ${loginEditText.text} registered",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            (activity as? MainActivity)?.startWishlist()
+                        }
+                        is DataStorageCoroutines.Failure -> {
+                            (activity as? MainActivity)?.hideProgressBar()
+                            Toast.makeText(view.context, result.message, Toast.LENGTH_LONG).show()
+                        }
                     }
-                )
+                }
             } else {
                 Toast.makeText(
                     view.context,

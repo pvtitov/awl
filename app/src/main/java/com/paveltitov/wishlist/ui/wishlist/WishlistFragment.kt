@@ -8,17 +8,19 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.coroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.core.DataStorage
+import com.paveltitov.wishlist.core.DataStorageCoroutines
 import com.paveltitov.wishlist.core.entities.Person
 import com.paveltitov.wishlist.core.entities.Wish
 import com.paveltitov.wishlist.di.DI
 import com.paveltitov.wishlist.ui.MainActivity
+import com.paveltitov.wishlist.ui.UIException
+import kotlinx.coroutines.launch
 
 class WishlistFragment : Fragment() {
-
-    private var progressShowCounter = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,41 +35,43 @@ class WishlistFragment : Fragment() {
         val wishListRecyclerView = view.findViewById<RecyclerView>(R.id.wishlist_recycler_view)
         val combinedList = mutableListOf<Person>()
 
-        fun updateAdapter() {
-            wishListRecyclerView.adapter = WishlistAdapter(combinedList) { wish ->
+        val wishlistAdapter = WishlistAdapter(
+            combinedList,
+            lifecycle,
+            { message ->
+                Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
+            },
+            { wish ->
                 (activity as MainActivity).startWish(wish)
             }
-        }
+        )
+        wishListRecyclerView.adapter = wishlistAdapter
 
-        with(DI.get(DataStorage::class) as DataStorage) {
-            progressShowCounter = 0
+        with(DI.get(DataStorageCoroutines::class) as DataStorageCoroutines) {
             (activity as? MainActivity)?.showProgressBar()
-            getMe(
-                onSuccess = { me ->
-                    progressShowCounter++
-                    hideProgressOnCount(2)
+            lifecycle.coroutineScope.launch {
+                try {
+                    val me: Person = when (val result = getMe()) {
+                        is DataStorageCoroutines.Success -> result.data
+                        is DataStorageCoroutines.Failure -> throw UIException(result.message)
+                    }
+
                     combinedList.add(0, me)
-                    updateAdapter()
-                },
-                onError = { message ->
-                    progressShowCounter++
-                    hideProgressOnCount(2)
-                    Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
-                }
-            )
-            getFriends(
-                onSuccess = { friendList ->
-                    progressShowCounter++
-                    hideProgressOnCount(2)
+                    wishlistAdapter.notifyItemChanged(0)
+
+                    val friendList: List<Person> = when (val result = getFriends()) {
+                        is DataStorageCoroutines.Success -> result.data
+                        is DataStorageCoroutines.Failure -> throw UIException(result.message)
+                    }
+
                     combinedList.addAll(friendList)
-                    updateAdapter()
-                },
-                onError = { message ->
-                    progressShowCounter++
-                    hideProgressOnCount(2)
-                    Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
+                    wishlistAdapter.notifyItemRangeChanged(1, friendList.size)
+                    (activity as? MainActivity)?.hideProgressBar()
+                } catch (e: UIException) {
+                    (activity as? MainActivity)?.hideProgressBar()
+                    Toast.makeText(view.context, e.message, Toast.LENGTH_LONG).show()
                 }
-            )
+            }
         }
         view.findViewById<Button>(R.id.wishlist_create_wish_button).setOnClickListener {
             (activity as MainActivity).startCreateWish()
@@ -77,13 +81,12 @@ class WishlistFragment : Fragment() {
         }
     }
 
-    private fun hideProgressOnCount(count: Int) {
-        if (progressShowCounter == count) {
-            (activity as? MainActivity)?.hideProgressBar()
-        }
-    }
-
-    class WishlistAdapter(personList: List<Person>, val onClick: (Wish) -> Unit) :
+    class WishlistAdapter(
+        personList: List<Person>,
+        lifecycle: Lifecycle,
+        errorHandler: (String) -> Unit,
+        val onClick: (Wish) -> Unit
+    ) :
         RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
         private val flatData: List<*>
@@ -94,21 +97,20 @@ class WishlistFragment : Fragment() {
             flatData = mutableListOf<Any>()
             personTypeIndexSet = mutableSetOf()
 
+            val dataStorage = (DI.get(DataStorageCoroutines::class) as DataStorageCoroutines)
+
             personList.forEach { person ->
                 flatData.add(person)
                 personTypeIndexSet.add(count++)
-                (DI.get(DataStorage::class) as DataStorage).getWishlist(
-                    person = person,
-                    onSuccess = { wishlist ->
-                        wishlist.forEach { wish ->
+                lifecycle.coroutineScope.launch {
+                    when (val response = dataStorage.getWishlist(person)) {
+                        is DataStorageCoroutines.Success -> response.data.forEach { wish ->
                             flatData.add(wish)
                             count++
                         }
-                    },
-                    onError = { message ->
-                        TODO("Handle error")
+                        is DataStorageCoroutines.Failure -> errorHandler(response.message)
                     }
-                )
+                }
             }
         }
 

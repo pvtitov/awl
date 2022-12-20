@@ -1,6 +1,7 @@
 package com.paveltitov.wishlist.ui.createwish
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,11 +9,14 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.coroutineScope
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.core.DataStorage
+import com.paveltitov.wishlist.core.DataStorageCoroutines
 import com.paveltitov.wishlist.core.entities.Wish
 import com.paveltitov.wishlist.di.DI
 import com.paveltitov.wishlist.ui.MainActivity
+import com.paveltitov.wishlist.ui.UIException
+import kotlinx.coroutines.launch
 
 class CreateWishFragment : Fragment() {
 
@@ -29,12 +33,22 @@ class CreateWishFragment : Fragment() {
         val titleEditText = view.findViewById<EditText>(R.id.create_wish_title_edit_text)
         view.findViewById<Button>(R.id.create_wish_confirm_button)?.setOnClickListener {
             (activity as? MainActivity)?.showProgressBar()
-            (DI.get(DataStorage::class) as DataStorage).getMe(
-                { me ->
+
+            lifecycle.coroutineScope.launch {
+                try {
+                    val me = when (val result =
+                        (DI.get(DataStorageCoroutines::class) as DataStorageCoroutines).getMe()) {
+                        is DataStorageCoroutines.Success -> result.data
+                        is DataStorageCoroutines.Failure -> throw UIException(result.message)
+                    }
+
                     val wish = Wish(titleEditText.text.toString(), me)
-                    (DI.get(DataStorage::class) as DataStorage).makeWish(
-                        wish,
-                        {
+
+                    when (val result =
+                        (DI.get(DataStorageCoroutines::class) as DataStorageCoroutines).makeWish(
+                            wish
+                        )) {
+                        is DataStorageCoroutines.Success -> {
                             (activity as? MainActivity)?.hideProgressBar()
                             Toast.makeText(
                                 view.context,
@@ -42,18 +56,19 @@ class CreateWishFragment : Fragment() {
                                 Toast.LENGTH_SHORT
                             ).show()
                             (activity as MainActivity).startWishlist()
-                        },
-                        { message ->
-                            (activity as? MainActivity)?.hideProgressBar()
-                            Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
                         }
-                    )
-                },
-                { message ->
+                        is DataStorageCoroutines.Failure -> throw UIException(result.message)
+                    }
+                } catch (e: UIException) {
                     (activity as? MainActivity)?.hideProgressBar()
-                    Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(view.context, e.message, Toast.LENGTH_LONG).show()
+                    Log.d(TAG, e.message ?: "UIException")
                 }
-            )
+            }
         }
+    }
+
+    companion object {
+        private const val TAG = "CreateWishFragment"
     }
 }

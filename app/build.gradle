@@ -28,10 +28,6 @@ android {
     flavorDimensions "dataSource"
 
     productFlavors {
-        stub {
-            dimension "dataSource"
-            applicationIdSuffix=".stub"
-        }
         googledrive {
             dimension "dataSource"
             applicationIdSuffix=".googledrive"

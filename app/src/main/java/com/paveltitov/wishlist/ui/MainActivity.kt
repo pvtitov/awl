@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.core.DataStorage
+import com.paveltitov.wishlist.core.DataStorageCoroutines
 import com.paveltitov.wishlist.core.ScreenRouter
 import com.paveltitov.wishlist.core.entities.Wish
 import com.paveltitov.wishlist.di.DI
@@ -138,6 +138,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun initDI() {
         DI.setFactory(ScreenRouter::class, ScreenRouterFactory(supportFragmentManager))
-        DI.setFactory(DataStorage::class, DataStorageFactory(this))
+        DI.setFactory(DataStorageCoroutines::class, DataStorageFactory(this))
     }
 }

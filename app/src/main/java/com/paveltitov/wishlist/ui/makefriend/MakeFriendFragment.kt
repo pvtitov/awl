@@ -8,10 +8,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.coroutineScope
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.core.DataStorage
+import com.paveltitov.wishlist.core.DataStorageCoroutines
 import com.paveltitov.wishlist.di.DI
 import com.paveltitov.wishlist.ui.MainActivity
+import kotlinx.coroutines.launch
 
 class MakeFriendFragment : Fragment() {
 
@@ -29,22 +31,26 @@ class MakeFriendFragment : Fragment() {
         view.findViewById<Button>(R.id.make_friend_confirm_button)?.setOnClickListener {
             val login = titleEditText.text.toString()
             (activity as? MainActivity)?.showProgressBar()
-            (DI.get(DataStorage::class) as DataStorage).makeFriend(
-                login,
-                {
-                    (activity as? MainActivity)?.hideProgressBar()
-                    Toast.makeText(
-                        view.context,
-                        "Friend $login added",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    (activity as MainActivity).startWishlist()
-                },
-                { message ->
-                    (activity as? MainActivity)?.hideProgressBar()
-                    Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
+            lifecycle.coroutineScope.launch {
+                when (val result =
+                    (DI.get(DataStorageCoroutines::class) as DataStorageCoroutines).makeFriend(
+                        login
+                    )) {
+                    is DataStorageCoroutines.Success -> {
+                        (activity as? MainActivity)?.hideProgressBar()
+                        Toast.makeText(
+                            view.context,
+                            "Friend $login added",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        (activity as MainActivity).startWishlist()
+                    }
+                    is DataStorageCoroutines.Failure -> {
+                        (activity as? MainActivity)?.hideProgressBar()
+                        Toast.makeText(view.context, result.message, Toast.LENGTH_LONG).show()
+                    }
                 }
-            )
+            }
         }
     }
 }

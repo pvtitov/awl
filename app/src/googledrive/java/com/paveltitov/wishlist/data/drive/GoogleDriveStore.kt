@@ -8,13 +8,14 @@ import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.core.DataStorage
+import com.paveltitov.wishlist.core.DataStorageCoroutines
 import com.paveltitov.wishlist.core.entities.Person
 import com.paveltitov.wishlist.core.entities.Wish
 import java.lang.ref.WeakReference
 import java.util.*
 
-class GoogleDriveStore(private val activityWeakReference: WeakReference<Activity>) : DataStorage {
+class GoogleDriveStore(private val activityWeakReference: WeakReference<Activity>) :
+    DataStorageCoroutines {
 
     private val googleDrive: Drive by lazy {
         initDrive()
@@ -23,90 +24,60 @@ class GoogleDriveStore(private val activityWeakReference: WeakReference<Activity
     private lateinit var wishList: List<Wish>
     private lateinit var friendsAndWishes: TreeMap<Person, List<Wish>>
 
-    override fun register(
+    override suspend fun register(
         login: String,
-        password: String,
-        onSuccess: () -> Unit,
-        onError: (message: String) -> Unit
-    ) {
+        password: String
+    ): DataStorageCoroutines.Response<Unit> {
         throw IllegalStateException("Authentication for Google Drive implemented with GoogleSignIn")
     }
 
-    override fun login(
+    override suspend fun login(
         login: String,
-        password: String,
-        onSuccess: () -> Unit,
-        onError: (message: String) -> Unit
-    ) {
+        password: String
+    ): DataStorageCoroutines.Response<Unit> {
         throw IllegalStateException("Authentication for Google Drive implemented with GoogleSignIn")
     }
 
-    override fun getMe(onSuccess: (me: Person) -> Unit, onError: (message: String) -> Unit) {
-        onSuccess(ME)
+    override suspend fun getMe(): DataStorageCoroutines.Response<Person> = DataStorageCoroutines.Success(ME)
+
+    override suspend fun getFriends(): DataStorageCoroutines.Response<List<Person>> {
+        TODO("Not yet implemented")
     }
 
-    override fun getFriends(
-        onSuccess: (friends: List<Person>) -> Unit,
-        onError: (message: String) -> Unit
-    ) {
-
+    override suspend fun makeFriend(login: String): DataStorageCoroutines.Response<Unit> {
+        TODO("Not yet implemented")
     }
 
-    override fun makeFriend(
-        login: String,
-        onSuccess: () -> Unit,
-        onError: (message: String) -> Unit
-    ) {
-
-    }
-
-    override fun getWishlist(
-        person: Person,
-        onSuccess: (wishlist: List<Wish>) -> Unit,
-        onError: (message: String) -> Unit
-    ) {
-        onSuccess(
-            when (person) {
-                ME -> {
-                    if (::wishList.isInitialized) {
-                        wishList
-                    } else {
-                        loadWishList(ME)
-                    }
-                }
-                else -> {
-                    if (::friendsAndWishes.isInitialized) {
-                        friendsAndWishes[person] ?: emptyList()
-                    } else {
-                        loadWishList(person)
-                    }
+    override suspend fun getWishlist(person: Person): DataStorageCoroutines.Response<List<Wish>> {
+        val wishlist = when (person) {
+            ME -> {
+                if (::wishList.isInitialized) {
+                    wishList
+                } else {
+                    loadWishList(ME)
                 }
             }
-        )
-    }
-
-    private fun loadWishList(person: Person): List<Wish> {
-        googleDrive // TODO remove
-        return when (person) {
-            ME -> { TODO("Not yet implemented") }
-            else -> { TODO("Not yet implemented") }
+            else -> {
+                if (::friendsAndWishes.isInitialized) {
+                    friendsAndWishes[person] ?: emptyList()
+                } else {
+                    loadWishList(person)
+                }
+            }
         }
+        return DataStorageCoroutines.Success(wishlist)
     }
 
-    override fun makeWish(wish: Wish, onSuccess: () -> Unit, onError: (message: String) -> Unit) {
-
+    override suspend fun makeWish(wish: Wish): DataStorageCoroutines.Response<Unit> {
+        TODO("Not yet implemented")
     }
 
-    override fun deleteWish(wish: Wish, onSuccess: () -> Unit, onError: (message: String) -> Unit) {
-
+    override suspend fun deleteWish(wish: Wish): DataStorageCoroutines.Response<Unit> {
+        TODO("Not yet implemented")
     }
 
-    override fun promiseWish(
-        wish: Wish,
-        onSuccess: () -> Unit,
-        onError: (message: String) -> Unit
-    ) {
-
+    override suspend fun promiseWish(wish: Wish): DataStorageCoroutines.Response<Unit> {
+        TODO("Not yet implemented")
     }
 
     private fun initDrive(): Drive {
@@ -126,6 +97,18 @@ class GoogleDriveStore(private val activityWeakReference: WeakReference<Activity
         )
             .setApplicationName(activity.getString(R.string.app_name))
             .build()
+    }
+
+    private fun loadWishList(person: Person): List<Wish> {
+        googleDrive // TODO remove
+        return when (person) {
+            ME -> {
+                TODO("Not yet implemented")
+            }
+            else -> {
+                TODO("Not yet implemented")
+            }
+        }
     }
 
     companion object {

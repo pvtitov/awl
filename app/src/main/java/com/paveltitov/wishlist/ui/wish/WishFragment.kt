@@ -8,11 +8,13 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.coroutineScope
 import com.paveltitov.wishlist.R
-import com.paveltitov.wishlist.core.DataStorage
+import com.paveltitov.wishlist.core.DataStorageCoroutines
 import com.paveltitov.wishlist.core.entities.Wish
 import com.paveltitov.wishlist.di.DI
 import com.paveltitov.wishlist.ui.MainActivity
+import kotlinx.coroutines.launch
 
 class WishFragment : Fragment() {
 
@@ -24,7 +26,7 @@ class WishFragment : Fragment() {
     ): View? {
         val args = arguments
         if (args != null) {
-            wish = args.get(WISH) as Wish
+            wish = args.getSerializable(WISH) as Wish
         } else {
             throw IllegalStateException("Should always be initialised wish wish argument.")
         }
@@ -45,60 +47,74 @@ class WishFragment : Fragment() {
         val promiseButton = view.findViewById<Button>(R.id.wish_promise_button)
 
         (activity as? MainActivity)?.showProgressBar()
-        (DI.get(DataStorage::class) as DataStorage).getMe(
-            { me ->
-                (activity as? MainActivity)?.hideProgressBar()
-                if (me == wish.owner) {
-                    deleteButton.visibility = View.VISIBLE
-                    promiseButton.visibility = View.GONE
-                    deleteButton.setOnClickListener {
-                        (activity as? MainActivity)?.showProgressBar()
-                        (DI.get(DataStorage::class) as DataStorage).deleteWish(
-                            wish = wish,
-                            onSuccess = {
-                                (activity as? MainActivity)?.hideProgressBar()
-                                Toast.makeText(
-                                    view.context,
-                                    "Wish ${wish.description} deleted",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                (activity as? MainActivity)?.startWishlist()
-                            },
-                            onError = { message ->
-                                (activity as? MainActivity)?.hideProgressBar()
-                                Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
+        lifecycle.coroutineScope.launch {
+            val dataStorage = (DI.get(DataStorageCoroutines::class) as DataStorageCoroutines)
+            when (val response = dataStorage.getMe()) {
+                is DataStorageCoroutines.Success -> {
+                    val me = response.data
+                    (activity as? MainActivity)?.hideProgressBar()
+                    if (me == wish.owner) {
+                        deleteButton.visibility = View.VISIBLE
+                        promiseButton.visibility = View.GONE
+                        deleteButton.setOnClickListener {
+                            (activity as? MainActivity)?.showProgressBar()
+                            lifecycle.coroutineScope.launch {
+                                when (val response = dataStorage.deleteWish(wish)) {
+                                    is DataStorageCoroutines.Success -> {
+                                        (activity as? MainActivity)?.hideProgressBar()
+                                        Toast.makeText(
+                                            view.context,
+                                            "Wish ${wish.description} deleted",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        (activity as? MainActivity)?.startWishlist()
+                                    }
+                                    is DataStorageCoroutines.Failure -> {
+                                        (activity as? MainActivity)?.hideProgressBar()
+                                        Toast.makeText(
+                                            view.context,
+                                            response.message,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
                             }
-                        )
-                    }
-                } else {
-                    deleteButton.visibility = View.GONE
-                    promiseButton.visibility = View.VISIBLE
-                    promiseButton.setOnClickListener {
-                        (activity as? MainActivity)?.showProgressBar()
-                        (DI.get(DataStorage::class) as DataStorage).promiseWish(
-                            wish = wish,
-                            onSuccess = {
-                                (activity as? MainActivity)?.hideProgressBar()
-                                Toast.makeText(
-                                    view.context,
-                                    "Wish ${wish.description} promised to ${wish.owner.login}",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                (activity as? MainActivity)?.startWishlist()
-                            },
-                            onError = { message ->
-                                (activity as? MainActivity)?.hideProgressBar()
-                                Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        deleteButton.visibility = View.GONE
+                        promiseButton.visibility = View.VISIBLE
+                        promiseButton.setOnClickListener {
+                            (activity as? MainActivity)?.showProgressBar()
+                            lifecycle.coroutineScope.launch {
+                                when (val response = dataStorage.promiseWish(wish)) {
+                                    is DataStorageCoroutines.Success -> {
+                                        (activity as? MainActivity)?.hideProgressBar()
+                                        Toast.makeText(
+                                            view.context,
+                                            "Wish ${wish.description} promised to ${wish.owner.login}",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        (activity as? MainActivity)?.startWishlist()
+                                    }
+                                    is DataStorageCoroutines.Failure -> {
+                                        (activity as? MainActivity)?.hideProgressBar()
+                                        Toast.makeText(
+                                            view.context,
+                                            response.message,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                }
                             }
-                        )
+                        }
                     }
                 }
-            },
-            { message ->
-                (activity as? MainActivity)?.hideProgressBar()
-                Toast.makeText(view.context, message, Toast.LENGTH_LONG).show()
+                is DataStorageCoroutines.Failure -> {
+                    (activity as? MainActivity)?.hideProgressBar()
+                    Toast.makeText(view.context, response.message, Toast.LENGTH_LONG).show()
+                }
             }
-        )
+        }
     }
 
     companion object {
