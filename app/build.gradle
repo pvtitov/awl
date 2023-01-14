@@ -1,0 +1,90 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.paveltitov.wishlist"
+        minSdk 16
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    flavorDimensions "dataSource"
+
+    productFlavors {
+        googledrive {
+            dimension "dataSource"
+            applicationIdSuffix=".googledrive"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/DEPENDENCIES']
+        }
+    }
+
+
+    lint {
+        baseline = file("lint-baseline.xml")
+    }
+    namespace 'com.paveltitov.wishlist'
+}
+
+configurations {
+    all {
+        exclude module: 'commons-logging'
+        exclude module: 'httpclient'
+    }
+}
+
+dependencies {
+
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation("androidx.fragment:fragment-ktx:1.5.5")
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+
+    // Google Drive
+    implementation 'com.google.android.gms:play-services-auth:20.4.0'
+    implementation('com.google.api-client:google-api-client-android:2.0.0')
+    implementation('com.google.apis:google-api-services-drive:v3-rev197-1.25.0')
+
+    // Net work
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation('com.google.http-client:google-http-client-gson:1.42.3')
+
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+}

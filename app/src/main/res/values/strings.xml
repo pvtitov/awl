@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Another Wish List</string>
+
+    <string name="login_edit_text">Login</string>
+    <string name="password_edit_text">Password</string>
+    <string name="confirm_password_edit_text">Confirm password</string>
+    <string name="login_confirm_button">OK</string>
+    <string name="login_register_button">Register</string>
+    <string name="register_confirm_button">Confirm</string>
+    <string name="register_different_passwords_message">Не совпадают пароли</string>
+    <string name="wishlist_create_wish_button">Make a wish</string>
+    <string name="create_wish_title_hint">Title</string>
+    <string name="create_wish_confirm_button">Confirm</string>
+    <string name="delete_wish_button">Delete</string>
+    <string name="promise_wish_button">Promise</string>
+    <string name="wish_status_is_promised">Promised</string>
+    <string name="wish_status_is_available">Available</string>
+    <string name="wishlist_make_friend_button">Add friend</string>
+    <string name="make_friend_title_hint">Friend\'s login</string>
+    <string name="make_friend_confirm_button">Find and add</string>
+
+</resources>
