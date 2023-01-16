@@ -4,20 +4,29 @@ import android.app.Activity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
+import com.google.api.client.http.ByteArrayContent
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
+import com.google.api.services.drive.model.File
+import com.google.api.services.drive.model.FileList
+import com.google.gson.Gson
 import com.paveltitov.wishlist.R
+import com.paveltitov.wishlist.core.entities.Wish
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.lang.ref.WeakReference
+import java.nio.charset.Charset
 
-class GoogleDriveFacade<T>(
-    private val file: GoogleDriveFile,
+
+class GoogleDriveFacade(
     activityWeakReference: WeakReference<Activity>
 ) {
+
+    private val gson: Gson by lazy { Gson() }
+    private var file: AwlFile? = null
 
     private val googleDrive: Drive by lazy {
         initDrive(
@@ -43,51 +52,99 @@ class GoogleDriveFacade<T>(
             .build()
     }
 
-    suspend fun findFile(): Result<T> {
+    private suspend fun findFile(fileName: String): Result<AwlFile> {
         return withContext(Dispatchers.IO) {
             try {
-                TODO()
+                var firstFoundFile: File? = null
+                var pageToken: String? = null
+                do {
+                    val result: FileList = googleDrive.files().list()
+                        .setQ("name='$fileName'")
+                        .setSpaces("appDataFolder")
+                        .setFields("nextPageToken, items(id, title)")
+                        .setPageToken(pageToken)
+                        .execute()
+                    if (result.files.isNullOrEmpty().not()) {
+                        firstFoundFile = result.files.first()
+                    }
+                    pageToken = result.nextPageToken
+                } while (pageToken != null)
+
+                return@withContext firstFoundFile
+                    ?.let {
+                        val file = AwlFile(it.id, it.name)
+                        this@GoogleDriveFacade.file = file
+                        Success(file)
+                    }
+                    ?: throw IllegalStateException("File $fileName not found")
+
             } catch (e: GoogleJsonResponseException) {
-                Error(e)
+                Failure(e)
+            } catch (e: IllegalStateException) {
+                Failure(e)
             }
         }
     }
 
-    suspend fun createFile(): Result<T> {
+    suspend fun createFile(): Result<AwlFile> {
         return withContext(Dispatchers.IO) {
             try {
-                TODO()
+                val resultFile: File = googleDrive.files()
+                    .create(File().apply { name = FILE_NAME })
+                    .execute()
+                val file = AwlFile(resultFile.id, resultFile.name)
+                this@GoogleDriveFacade.file = file
+                Success(file)
             } catch (e: GoogleJsonResponseException) {
-                Error(e)
+                Failure(e)
             }
         }
     }
 
-    suspend fun downloadFile(): Result<T> {
+    suspend fun downloadFile(fileId: String): Result<Storage> {
         return withContext(Dispatchers.IO) {
             try {
                 val outputStream = ByteArrayOutputStream()
-                googleDrive.files().get(file.id).executeMediaAndDownloadTo(outputStream)
-                TODO()
+                googleDrive.files().get(fileId).executeMediaAndDownloadTo(outputStream)
+                val resultString = outputStream.toString("UTF-8")
+                val jsonRootObject: Storage = gson.fromJson(resultString, Storage::class.java)
+                Success(jsonRootObject)
             } catch (e: GoogleJsonResponseException) {
-                Error(e)
+                Failure(e)
             }
         }
     }
 
-    suspend fun uploadFile(data: T): Result<T> {
+    suspend fun uploadFile(storage: Storage): Result<Storage> {
         return withContext(Dispatchers.IO) {
             try {
-                TODO()
+                val file = this@GoogleDriveFacade.file
+                    ?: throw IllegalStateException("File $FILE_NAME was not found or created")
+
+                val data: ByteArray = gson.toJson(storage).toByteArray(Charset.forName("UTF-8"))
+
+                googleDrive.files()
+                    .create(
+                        File().apply { name = file.name },
+                        ByteArrayContent("application/json", data)
+                    )
+                    .execute()
+                Success(storage)
             } catch (e: GoogleJsonResponseException) {
-                Error(e)
+                Failure(e)
+            } catch (e: IllegalStateException) {
+                Failure(e)
             }
         }
     }
 }
 
-class GoogleDriveFile(val id: String)
-
 sealed interface Result<T>
-class Success<T>(val data: T) : Result<T>
-class Error<T>(val e: Exception) : Result<T>
+data class Success<T>(val data: T) : Result<T>
+data class Failure<T>(val e: Exception) : Result<T>
+
+data class Storage(val wishlistByLogin: Map<String, List<Wish>>)
+
+data class AwlFile(val id: String, val name: String)
+
+private const val FILE_NAME = "awl.json"
